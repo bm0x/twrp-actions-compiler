@@ -1,0 +1,25 @@
+build:
+  image: ubuntu
+  before_script:
+    - apt update
+    - apt install -y build-essential wget zip curl libstdc++6 git python3 python-is-python3 gcc clang libssl-dev repo rsync flex bison aria2
+    - curl --create-dirs -L -o /usr/local/bin/repo -O -L https://storage.googleapis.com/git-repo-downloads/repo
+    - chmod a+rx /usr/local/bin/repo
+    - git config --global user.name "CI"
+    - git config --global user.email "CI@CI.CI"
+  script:
+    - mkdir twrp && cd twrp
+    - repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1
+    - git clone -b a13-halium-11.0 https://gitlab.azka.li/samsung/q2q/manifest .repo/local_manifests
+    - repo sync -j$(nproc) -c
+    - source build/envsetup.sh
+    - lunch aosp_q2q-eng
+    - mka recoveryimage
+    - cp out/target/product/q2q/recovery.img ../
+    - cp out/target/product/q2q/recovery.tar ../
+  tags:
+    - x86_64
+  artifacts:
+    paths:
+      - recovery.img
+      - recovery.tar
