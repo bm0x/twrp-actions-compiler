@@ -32,6 +32,10 @@ on:
         required: true
         default: 'q2q'
 
+
+permissions:
+  contents: write
+
 env:
   TZ: America/Santiago
 
@@ -104,4 +108,4 @@ jobs:
         tag_name: ${{ github.run_id }}
         body: Recovery for ${{ github.event.inputs.DEVICE_NAME }}
       env:
-        GITHUB_TOKEN: ${{ secrets.work }}
+        GITHUB_TOKEN: ${{ github.token }}
