@@ -33,23 +33,16 @@ on:
         default: 'q2q'
 
 env:
-  TZ: Asia/Shanghai
+  TZ: America/Santiago
 
 jobs:
   build:
     if: github.event.repository.owner.id == github.event.sender.id
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     
     steps:
     - name: Maximize build disk space
-      uses: easimon/maximize-build-space@v5
-      with:
-        root-reserve-mb: 1024
-        swap-size-mb: 6144
-        remove-dotnet: 'true'
-        temp-reserve-mb: 1024
-        remove-android: 'true'
-        remove-haskell: 'true'
+    uses: rokibhasansagar/slimhub_actions@main
 
     - name: Check Out
       uses: actions/checkout@main
