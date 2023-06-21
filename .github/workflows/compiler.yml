@@ -86,6 +86,7 @@ jobs:
         git config --global user.name "Hikaru's Action-Build-Bot"
         git config --global user.email "Android@teio.tk"
         repo init --depth=1 -u ${{ github.event.inputs.LIBRARY_URL }} -b ${{ github.event.inputs.LIBRARY_BRANCH }}
+        git clone ${{ github.event.inputs.DEVICE_URL }} -b ${{ github.event.inputs.DEVICE_BRANCH }} ./${{ github.event.inputs.DEVICE_PATH }}
       id: pwd
           
     - name: Repo Sync
@@ -93,13 +94,7 @@ jobs:
         PATH=~/bin:$PATH
         cd workspace
         repo sync -j$(nproc --all)
-      
-    - name: Clone device
-      run: |
-        PATH=~/bin:$PATH
-        cd ${{ steps.pwd.outputs.pwd }}
-        git clone ${{ github.event.inputs.DEVICE_URL }} -b ${{ github.event.inputs.DEVICE_BRANCH }} ./${{ github.event.inputs.DEVICE_PATH }}
-        
+    
     - name: Building
       run: |
         PATH=~/bin:$PATH
