@@ -1,0 +1,107 @@
+name: Make Motorola Edge 40 Recovery
+
+on:
+  workflow_dispatch:
+    inputs:
+      LIBRARY_NAME:
+        description: 'Name Library'
+        required: true
+        default: 'aosp'
+      LIBRARY_URL:
+        description: 'URL Library'
+        required: true
+        default: 'https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp'
+      LIBRARY_BRANCH:
+        description: 'Branch Library'
+        required: true
+        default: 'twrp-12.1'
+      DEVICE_URL:
+        description: 'Device URL'
+        required: true
+        default: 'https://github.com/bm0x/twrp_motorola_lyriq'
+      DEVICE_BRANCH:
+        description: 'Branch Device'
+        required: true
+        default: 'a13'
+      DEVICE_NAME:
+        description: 'Device Name'
+        required: true
+        default: 'lyriq'
+
+
+permissions:
+  contents: write
+
+env:
+  TZ: America/Santiago
+
+jobs:
+  build:
+    if: github.event.repository.owner.id == github.event.sender.id
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Maximize build disk space
+      uses: rokibhasansagar/slimhub_actions@main
+
+    - name: Check Out
+      uses: actions/checkout@main
+
+    - name: Prepare the environment
+      run: |
+        sudo apt clean
+        sudo apt update
+        sudo apt -y install git-core gnupg flex bison gperf build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev tree lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc unzip jq bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev imagemagick libbz2-dev libssl-dev lzma ncftp bash-completion python openjdk-8-jdk qemu-user-static
+      
+    - name: Set variables
+      run: |
+        echo "::set-output name=date::$(date +%F)"
+      id: var
+      
+    - name: Install repo
+      run: |
+        mkdir ~/bin
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+        chmod a+x ~/bin/repo
+        export PATH=~/bin:$PATH
+      
+    - name: Initialize repo
+      run: |
+        PATH=~/bin:$PATH
+        mkdir workspace
+        cd workspace
+        echo "::set-output name=pwd::$(pwd)"
+        git config --global user.name "bm0x Github Actions bot"
+        git config --global user.email "bm0x.actions_bot@github.com"
+        repo init --depth=1 -u ${{ github.event.inputs.LIBRARY_URL }} -b ${{ github.event.inputs.LIBRARY_BRANCH }}
+        git clone ${{ github.event.inputs.DEVICE_URL }} -b ${{ github.event.inputs.DEVICE_BRANCH }}
+      id: pwd
+          
+    - name: Repo Sync
+      run: |
+        PATH=~/bin:$PATH
+        cd workspace
+        repo sync -j$(nproc --all)
+    
+    - name: Building
+      run: |
+        PATH=~/bin:$PATH
+        cd ${{ steps.pwd.outputs.pwd }}
+        export ALLOW_MISSING_DEPENDENCIES=true
+        export LC_ALL=C
+        source build/envsetup.sh
+        lunch twrp_${{ github.event.inputs.DEVICE_NAME }}-eng
+        make clean && make clobber
+        mka adbd recoveryimage -j$(nproc --all)
+        
+    - name: Upload to Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/boot.img
+          workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/vendor_boot.img
+        name: ${{ github.event.inputs.DEVICE_NAME }}-${{ github.run_id }}
+        tag_name: ${{ github.run_id }}
+        body: Recovery for ${{ github.event.inputs.DEVICE_NAME }}
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
