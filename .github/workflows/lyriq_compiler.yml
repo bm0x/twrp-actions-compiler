@@ -100,7 +100,7 @@ jobs:
         files: |
           workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/boot.img
           workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/dtbo.img
-        name: ${{ github.event.inputs.DEVICE_NAME }}-${{ github.run_id }}
+        name: Recovery for ${{ github.event.inputs.DEVICE_NAME }}
         tag_name: ${{ github.run_id }}
         body: Recovery for ${{ github.event.inputs.DEVICE_NAME }}
       env:
