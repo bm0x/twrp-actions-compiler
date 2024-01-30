@@ -74,7 +74,7 @@ jobs:
         git config --global user.name "bm0x Github Actions bot"
         git config --global user.email "bm0x.actions_bot@github.com"
         repo init --depth=1 -u ${{ github.event.inputs.LIBRARY_URL }} -b ${{ github.event.inputs.LIBRARY_BRANCH }}
-        git clone ${{ github.event.inputs.DEVICE_URL }} -b ${{ github.event.inputs.DEVICE_BRANCH }}
+        git clone ${{ github.event.inputs.DEVICE_URL }} -b ${{ github.event.inputs.DEVICE_BRANCH }} ./device/motorola/lyriq
       id: pwd
           
     - name: Repo Sync
